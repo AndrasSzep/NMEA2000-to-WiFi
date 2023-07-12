@@ -1,0 +1,94 @@
+/*  Complete project details: https://randomnerdtutorials.com/esp32-web-server-websocket-sliders/  */
+
+html {
+    font-family: Arial, Helvetica, sans-serif;
+    display: inline-block;
+    text-align: center;
+  }
+  h1 {
+    font-size: 1.0rem;
+    color: white;
+  }
+  p {
+    font-size: 1.4rem;
+  }
+  .topnav {
+    overflow: hidden;
+    background-color: #0e2b8a;
+  }
+  body {
+    margin: 0;
+  }
+  .content {
+    padding: 30px;
+  }
+  .card-grid {
+	max-width: 750px;
+	margin: 0 auto;
+	display: grid;
+	grid-gap: 2rem;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  .card {
+ 	 background-color: transparent;
+ 	 box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+ 	 position: relative;
+  }
+  .card canvas {
+ 	 position: absolute;
+ 	 top: 0;
+ 	 left: 0;
+  }
+  .card-title {
+    font-size: 3.0rem;
+    font-weight: bold;
+    color: #034078
+  }
+  .state {
+    font-size: 6.0rem;
+    color: #0b31ae;
+  }  
+  .state-small {
+    font-size: 4.0rem;
+    font-stretch: ultra-condensed;
+    color: #0b31ae;
+  }
+  .slider {
+    -webkit-appearance: none;
+    margin: 0 auto;
+    width: 100%;
+    height: 5px;
+    border-radius: 5px;
+    background: #1faa21;
+    outline: none;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #034078;
+    cursor: pointer;
+  }
+  .slider::-moz-range-thumb {
+    width: 30px;
+    height: 30px;
+    border-radius: 50% ;
+    background: #034078;
+    cursor: pointer;
+  }
+  .switch {
+    padding-left: 5%;
+    padding-right: 5%;
+  }
+.canvas-container {
+  width: 100%;
+  height: 70%;
+}
+
+#myCanvas {
+  width: 100%;
+  height: 100%;
+}
+

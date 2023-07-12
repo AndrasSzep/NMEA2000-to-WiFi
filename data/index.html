@@ -1,0 +1,74 @@
+<!-- / -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NMEA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="favicon.ico">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+    <script src="chart.javascript"></script>
+<body>
+    <div class="topnav">
+        <h1><span id="timedate"></span> <span id="chipid"></span>.local</h1>
+    </div>
+    <div class="content">
+        <div class="card-grid">
+			<div class="card">
+            	<p class="card-title">RPM</p>
+            	<p class="state"><span id="rpm"></span></p>
+            </div>
+            <div class="card">
+                <p class="card-title">Speed</p>
+                <p class="state"><span id="speed"></span> kn</p>
+            </div>
+            <div class="card">
+                <p class="card-title">Depth</p>
+                <p class="state"><span id="depth"></span> m</p>
+            </div>
+            <div class="card">
+                <p class="card-title">Heading</p>
+                <p class="state"><span id="heading"></span>&deg;</p>
+            </div>
+            <div class="card">
+                <p class="card-title">WindSpeed</p>
+                <p class="state-small"><span id="windspeed"></span> kn</p>
+            </div>
+            <div class="card">
+                <p class="card-title">WindDir</p>
+                <p class="state-small"><span id="winddir"></span>&deg;</p>
+            </div>
+			<div class="card">
+                <p class="card-title">Latitude</p>
+                <p class="state-small"><span id="latitude"></span></p>
+            </div>
+            <div class="card">
+                <p class="card-title">Longitude</p>
+                <p class="state-small"><span id="longitude"></span></p>
+            </div>
+            <div class="card">
+				<canvas id="waterchart"></canvas>
+                <p class="card-title">Water</p>
+                <p class="state"><span id="watertemp"></span>&deg;C</p>
+            </div>
+			<div class="card">
+				<canvas id="tempchart"></canvas>
+                <p class="card-title">AirTemp</p>
+                <p class="state"><span id="airtemp"></span>&deg;C</p>
+            </div>
+            <div class="card">
+				<canvas id="humchart"></canvas>
+                <p class="card-title">Humidity</p>
+                <p class="state"><span id="humidity"></span>&percnt;</p>
+            </div>		
+			<div class="card">
+				<canvas id="preschart"></canvas>
+				<p class="card-title">Pressure</p>
+  				<p class="state"><span id="pressure"></span>mm</p>
+			</div>
+		</div>
+    </div>			
+    <script src="script.js"></script>
+</body>
+</html>
