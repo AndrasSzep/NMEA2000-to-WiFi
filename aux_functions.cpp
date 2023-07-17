@@ -1,3 +1,4 @@
+#include "WString.h"
 /* 
 by Dr.András Szép under GNU General Public License (GPL).
 */
@@ -9,6 +10,7 @@ by Dr.András Szép under GNU General Public License (GPL).
 #include <NTPClient.h>
 //#include "config.h"
 #include "mywifi.h"
+#include <TimeLib.h>
 
 int parseNMEA0183( String sentence, String data[]) {
   int noOfFields = 0;
@@ -96,6 +98,23 @@ String int2string(int number) {
   } else {
     return String(number);
   }
+}
+
+String GPStoString( double coordinate) {
+//  Serial.print(coordinate);
+  String ret = "";
+  if( coordinate < 0) {
+    coordinate = -coordinate;
+    ret += "-";
+  }
+  int deg = (int)coordinate;                           // Extract the whole degrees part
+  double minutesFloat = (coordinate - deg) * 60.0;     // Calculate the decimal minutes part
+  int min = (int)minutesFloat;                         // Extract the whole minutes part
+  double secondsFloat = (minutesFloat - min) * 60.0;   // Calculate the decimal seconds part
+  int sec = (int)secondsFloat;                         // Extract the whole seconds part
+  ret += String(deg) + "°" + String(min) + "'" + String(sec) + '"';
+//  Serial.println(ret);
+  return ret;
 }
 
 String convertGPString(String input) {
@@ -207,6 +226,40 @@ String getDT()
   dateTimeString += String(currentTime->tm_sec);
 
   return dateTimeString;
+}
+
+String secondsToTimeString(int seconds) {
+    int hours = seconds / 3600;
+    int minutes = (seconds % 3600) / 60;
+    int remainingSeconds = seconds % 60;
+
+    // Format the components into a string
+    String timeString = String(hours) + ":" +
+                        String(minutes) + ":" +
+                        String(remainingSeconds);
+
+    // Pad the components with leading zeros if necessary
+    if (hours < 10) {
+        timeString = "0" + timeString;
+    }
+    if (minutes < 10) {
+        timeString = "0" + timeString;
+    }
+    if (remainingSeconds < 10) {
+        timeString = "0" + timeString;
+    }
+
+    return timeString;
+}
+
+String convertDaysToDate(uint16_t daysSince1970)
+{
+  time_t timestamp = ((unsigned long)daysSince1970-165) * SECS_PER_DAY;
+  struct tm *timeinfo;
+  timeinfo = gmtime(&timestamp);
+  Serial.print(timeinfo);
+  String ret = String( (int)( timeinfo->tm_year + 1900) ) + "-" + String( (int)timeinfo->tm_mon + 1) + "-" + String( (int)timeinfo->tm_mday);
+  return ret;
 }
 
 // Initialize WiFi

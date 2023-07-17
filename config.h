@@ -2,7 +2,8 @@
 /* 
 by Dr.András Szép under GNU General Public License (GPL).
 */
-#define DEBUG       //additional print of all data on serial
+//#define DEBUG       //additional print of all data on serial
+//#define PRINTNMEA
 //#define STOREWIFI   // store wifi credentials on the SPIFFS
 //#define READWIFI    // get Wifi credentials from SPIFFS
 //#define ENVSENSOR       //environmental sensors connected
@@ -27,6 +28,7 @@ const double radToDeg = 180.0 / M_PI;
 const double msToKn = 3600.0 / 1852.0;
 const double kpaTommHg = 133.322387415;
 const double KToC = 273.15;
+const double mpsToKn = 1.943844;
 //#define N2k_SPI_CS_PIN 53    // Pin for SPI select for mcp_can
 //#define N2k_CAN_INT_PIN 21   // Interrupt pin for mcp_can
 //#define USE_MCP_CAN_CLOCK_SET 8  // Uncomment this, if your mcp_can shield has 8MHz chrystal
@@ -38,7 +40,7 @@ const double KToC = 273.15;
 #include <M5StickC.h>
 #include "M5_ENV.h"
 
-SHT3X sht30;
+    SHT3X sht30;
 QMP6988 qmp6988;
 float tmp = 20.0;
 float hum = 50.0;

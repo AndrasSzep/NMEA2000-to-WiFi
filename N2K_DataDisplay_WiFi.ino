@@ -1,16 +1,20 @@
 /*
-by Dr.András Szép v1.3 3.7.2023 GNU General Public License (GPL).
+by Dr.András Szép v1.4 13.7.2023 GNU General Public License (GPL).
 */
 
 /*
 This is an AI (chatGPT) assisted development for
-Arduino ESP32 code to display UDP-broadcasted NMEA0183 messages
-(like from a NMEA0183 simulator https://github.com/panaaj/nmeasimulator )
+Arduino ESP32 code to display data from NMEA2000 data bus.
+https://shop.m5stack.com/products/atom-canbus-kit-ca-is3050g
+
 through a webserver to be seen on any mobile device for free.
+I left the test input over UDP ports to for NMEA0183 data from simuators incroporated, just in case.
+https://github.com/panaaj/nmeasimulator
+
 Websockets used to autoupdate the data.
 Environmental sensors incorporated and data for the last 24hours stored respectively
-in the SPIFFS files /pressure, /temperature, /humidity.
-The historical environmental data displayed in the background as charts.
+in the SPIFFS files /pressure.txt, /temperature.txt, /humidity.txt.
+The historical environmental data displayed in the background as charts using https://www.chartjs.org
 
 Local WiFi attributes are stored at SPIFFS in files named /ssid.txt and /password.txt = see initWiFi()
 WPS never been tested but assume working.
@@ -23,7 +27,6 @@ especially in the client and stored data files.
 ToDo:
       LED lights on M5Atom. Still need some ideas of colors and blinking signals
 
-      incorporate NMEA2000 can bus connection to receive data along with NMEA0183 on UDP.
 
 */
 
@@ -153,6 +156,8 @@ String rpm = "0";
 String depth = "0";
 String speed = "0";
 String heading = "90";
+String cog = "0";
+String sog = "0";
 String windspeed = "0";
 String winddir = "0";
 String longitude = "45º10'20\"N";
@@ -224,10 +229,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
         // Prepare JSON data
         DynamicJsonDocument jsonDoc(1024);
         // read data
-        jsonDoc["histtemp"] = readStoredData("/temperature");
-        jsonDoc["histhum"] = readStoredData("/humidity");
-        jsonDoc["histpres"] = readStoredData("/pressure");
-        jsonDoc["histwater"] = readStoredData("/water");
+        jsonDoc["histtemp"] = readStoredData("/temperature.txt");
+        jsonDoc["histhum"] = readStoredData("/humidity.txt");
+        jsonDoc["histpres"] = readStoredData("/pressure.txt");
+        jsonDoc["histwater"] = readStoredData("/water.txt");
         notifyClients();
       }
       else
@@ -361,6 +366,7 @@ void setup() {
 
 //*****************************************************************************
 template<typename T> void PrintLabelValWithConversionCheckUnDef(const char* label, T val, double (*ConvFunc)(double val)=0, bool AddLf=false, int8_t Desim=-1 ) {
+#ifdef PRINTNMEA
   OutputStream->print(label);
   if (!N2kIsNA(val)) {
     if ( Desim<0 ) {
@@ -370,9 +376,10 @@ template<typename T> void PrintLabelValWithConversionCheckUnDef(const char* labe
     }
   } else OutputStream->print("not available");
   if (AddLf) OutputStream->println();
+#endif
 }
 
-//*****************************************************************************
+//**#timedate***************************************************************************
 void SystemTime(const tN2kMsg &N2kMsg) {
     unsigned char SID;
     uint16_t SystemDate;
@@ -381,12 +388,16 @@ void SystemTime(const tN2kMsg &N2kMsg) {
     
     if (ParseN2kSystemTime(N2kMsg,SID,SystemDate,SystemTime,TimeSource) ) 
     {
+    #ifdef PRINTNMEA
       OutputStream->println("System time:");
       PrintLabelValWithConversionCheckUnDef("  SID: ",SID,0,true);
       PrintLabelValWithConversionCheckUnDef("  days since 1.1.1970: ",SystemDate,0,true);
       PrintLabelValWithConversionCheckUnDef("  seconds since midnight: ",SystemTime,0,true);
       OutputStream->print("  time source: "); 
       PrintN2kEnumType(TimeSource,OutputStream);
+    #endif
+      jsonDoc["timedate"] = convertDaysToDate(SystemDate) + "___" + secondsToTimeString((int)SystemTime) +"___";
+      notifyClients();
     } else {
       OutputStream->print("Failed to parse PGN: "); OutputStream->println(N2kMsg.PGN);
     }
@@ -512,12 +523,14 @@ void Heading(const tN2kMsg &N2kMsg) {
     double Variation;
     
     if (ParseN2kHeading(N2kMsg,SID,Heading,Deviation,Variation,HeadingReference) ) {
+      #ifdef PRINTNMEA
                       OutputStream->println("Heading:");
       PrintLabelValWithConversionCheckUnDef("  SID: ",SID,0,true);
                         OutputStream->print("  reference: "); PrintN2kEnumType(HeadingReference,OutputStream);
       PrintLabelValWithConversionCheckUnDef("  Heading (deg): ",Heading,&RadToDeg,true);
       PrintLabelValWithConversionCheckUnDef("  Deviation (deg): ",Deviation,&RadToDeg,true);
       PrintLabelValWithConversionCheckUnDef("  Variation (deg): ",Variation,&RadToDeg,true);
+      #endif
       heading = String((int)(Heading * radToDeg));
       jsonDoc["heading"] = heading;
       notifyClients();
@@ -539,53 +552,66 @@ void COGSOG(const tN2kMsg &N2kMsg) {
                         OutputStream->print("  reference: "); PrintN2kEnumType(HeadingReference,OutputStream);
       PrintLabelValWithConversionCheckUnDef("  COG (deg): ",COG,&RadToDeg,true);
       PrintLabelValWithConversionCheckUnDef("  SOG (m/s): ",SOG,0,true);
+      cog = String((int)(COG * radToDeg));
+      jsonDoc["cog"] = cog;
+      sog = String((int)(SOG * mpsToKn));
+      jsonDoc["sog"] = sog;
+      notifyClients();
     } else {
       OutputStream->print("Failed to parse PGN: "); OutputStream->println(N2kMsg.PGN);
     }
 }
 
-//*****************************************************************************
+//*#latlong*#timedate***************************************************************************
 void GNSS(const tN2kMsg &N2kMsg) {
-    unsigned char SID;
-    uint16_t DaysSince1970;
-    double SecondsSinceMidnight; 
-    double Latitude;
-    double Longitude;
-    double Altitude; 
-    tN2kGNSStype GNSStype;
-    tN2kGNSSmethod GNSSmethod;
-    unsigned char nSatellites;
-    double HDOP;
-    double PDOP;
-    double GeoidalSeparation;
-    unsigned char nReferenceStations;
-    tN2kGNSStype ReferenceStationType;
-    uint16_t ReferenceSationID;
-    double AgeOfCorrection;
+  unsigned char SID;
+  uint16_t DaysSince1970;
+  double SecondsSinceMidnight; 
+  double Latitude;
+  double Longitude;
+  double Altitude; 
+  tN2kGNSStype GNSStype;
+  tN2kGNSSmethod GNSSmethod;
+  unsigned char nSatellites;
+  double HDOP;
+  double PDOP;
+  double GeoidalSeparation;
+  unsigned char nReferenceStations;
+  tN2kGNSStype ReferenceStationType;
+  uint16_t ReferenceSationID;
+  double AgeOfCorrection;
 
-    if (ParseN2kGNSS(N2kMsg,SID,DaysSince1970,SecondsSinceMidnight,
-                  Latitude,Longitude,Altitude,
-                  GNSStype,GNSSmethod,
-                  nSatellites,HDOP,PDOP,GeoidalSeparation,
-                  nReferenceStations,ReferenceStationType,ReferenceSationID,
-                  AgeOfCorrection) ) {
-                      OutputStream->println("GNSS info:");
-      PrintLabelValWithConversionCheckUnDef("  SID: ",SID,0,true);
-      PrintLabelValWithConversionCheckUnDef("  days since 1.1.1970: ",DaysSince1970,0,true);
-      PrintLabelValWithConversionCheckUnDef("  seconds since midnight: ",SecondsSinceMidnight,0,true);
-      PrintLabelValWithConversionCheckUnDef("  latitude: ",Latitude,0,true,9);
-      PrintLabelValWithConversionCheckUnDef("  longitude: ",Longitude,0,true,9);
-      PrintLabelValWithConversionCheckUnDef("  altitude: (m): ",Altitude,0,true);
-                        OutputStream->print("  GNSS type: "); PrintN2kEnumType(GNSStype,OutputStream);
-                        OutputStream->print("  GNSS method: "); PrintN2kEnumType(GNSSmethod,OutputStream);
-      PrintLabelValWithConversionCheckUnDef("  satellite count: ",nSatellites,0,true);
-      PrintLabelValWithConversionCheckUnDef("  HDOP: ",HDOP,0,true);
-      PrintLabelValWithConversionCheckUnDef("  PDOP: ",PDOP,0,true);
-      PrintLabelValWithConversionCheckUnDef("  geoidal separation: ",GeoidalSeparation,0,true);
-      PrintLabelValWithConversionCheckUnDef("  reference stations: ",nReferenceStations,0,true);
-    } else {
-      OutputStream->print("Failed to parse PGN: "); OutputStream->println(N2kMsg.PGN);
-    }
+  if (ParseN2kGNSS(N2kMsg,SID,DaysSince1970,SecondsSinceMidnight,
+                Latitude,Longitude,Altitude,
+                GNSStype,GNSSmethod,
+                nSatellites,HDOP,PDOP,GeoidalSeparation,
+                nReferenceStations,ReferenceStationType,ReferenceSationID,
+                AgeOfCorrection) ) {
+    #ifdef PRINTNMEA
+                    OutputStream->println("GNSS info:");
+    PrintLabelValWithConversionCheckUnDef("  SID: ",SID,0,true);
+    PrintLabelValWithConversionCheckUnDef("  days since 1.1.1970: ",DaysSince1970,0,true);
+    PrintLabelValWithConversionCheckUnDef("  seconds since midnight: ",SecondsSinceMidnight,0,true);
+    PrintLabelValWithConversionCheckUnDef("  latitude: ",Latitude,0,true,9);
+    PrintLabelValWithConversionCheckUnDef("  longitude: ",Longitude,0,true,9);
+    PrintLabelValWithConversionCheckUnDef("  altitude: (m): ",Altitude,0,true);
+                      OutputStream->print("  GNSS type: "); PrintN2kEnumType(GNSStype,OutputStream);
+                      OutputStream->print("  GNSS method: "); PrintN2kEnumType(GNSSmethod,OutputStream);
+    PrintLabelValWithConversionCheckUnDef("  satellite count: ",nSatellites,0,true);
+    PrintLabelValWithConversionCheckUnDef("  HDOP: ",HDOP,0,true);
+    PrintLabelValWithConversionCheckUnDef("  PDOP: ",PDOP,0,true);
+    PrintLabelValWithConversionCheckUnDef("  geoidal separation: ",GeoidalSeparation,0,true);
+    PrintLabelValWithConversionCheckUnDef("  reference stations: ",nReferenceStations,0,true);
+    #endif
+    jsonDoc["timedate"] = convertDaysToDate(DaysSince1970) + " " + secondsToTimeString((int)SecondsSinceMidnight) + "___";
+    BoatData.Latitude = Latitude;
+    BoatData.Longitude = Longitude;
+    jsonDoc["latitude"] = GPStoString(BoatData.Latitude);
+    jsonDoc["longitude"] = GPStoString(BoatData.Longitude);
+    notifyClients();
+  } else {
+    OutputStream->print("Failed to parse PGN: "); OutputStream->println(N2kMsg.PGN);
+  }
 }
 
 //*****************************************************************************
@@ -681,9 +707,11 @@ void Temperature(const tN2kMsg &N2kMsg) {
     double SetTemperature;
     
     if (ParseN2kTemperature(N2kMsg,SID,TempInstance,TempSource,ActualTemperature,SetTemperature) ) {
+    #ifdef PRINTNMEA
                         OutputStream->print("Temperature source: "); PrintN2kEnumType(TempSource,OutputStream,false);
       PrintLabelValWithConversionCheckUnDef(", actual temperature: ",ActualTemperature,&KelvinToC);
       PrintLabelValWithConversionCheckUnDef(", set temperature: ",SetTemperature,&KelvinToC,true);
+    #endif
       airtemp = String(KelvinToC(ActualTemperature),1);
       jsonDoc["airtemp"] = airtemp;
       notifyClients();
@@ -701,10 +729,12 @@ void Humidity(const tN2kMsg &N2kMsg) {
     
     if ( ParseN2kHumidity(N2kMsg,SID,Instance,HumiditySource,ActualHumidity,SetHumidity) ) 
     {
+      #ifdef PRINTNMEA
       OutputStream->print("Humidity source: "); 
       PrintN2kEnumType(HumiditySource,OutputStream,false);
       PrintLabelValWithConversionCheckUnDef(", humidity: ",ActualHumidity,0,false);
       PrintLabelValWithConversionCheckUnDef(", set humidity: ",SetHumidity,0,true);
+      #endif
       humidity = String((int)ActualHumidity);
       jsonDoc["humidity"] = humidity;
       notifyClients();
@@ -722,8 +752,10 @@ void Pressure(const tN2kMsg &N2kMsg) {
     double ActualPressure;
     
     if ( ParseN2kPressure(N2kMsg,SID,Instance,PressureSource,ActualPressure) ) {
+      #ifdef PRINTNMEA
                         OutputStream->print("Pressure source: "); PrintN2kEnumType(PressureSource,OutputStream,false);
       PrintLabelValWithConversionCheckUnDef(", pressure: ",ActualPressure,&PascalTomBar,true);
+      #endif
       pressure = String((int)(ActualPressure/kpaTommHg));
       jsonDoc["pressure"] = pressure;
       notifyClients();
@@ -809,11 +841,13 @@ void Speed(const tN2kMsg &N2kMsg) {
     tN2kSpeedWaterReferenceType SWRT;
 
     if (ParseN2kBoatSpeed(N2kMsg,SID,SOW,SOG,SWRT) ) {
+    #ifdef PRINTNMEA
       OutputStream->print("Boat speed:");
       PrintLabelValWithConversionCheckUnDef(" SOW:",N2kIsNA(SOW)?SOW:msToKnots(SOW));
       PrintLabelValWithConversionCheckUnDef(", SOG:",N2kIsNA(SOG)?SOG:msToKnots(SOG));
       OutputStream->print(", ");
       PrintN2kEnumType(SWRT,OutputStream,true);
+    #endif
       speed = String( SOW, 1);
       jsonDoc["speed"] = speed;
       notifyClients();
@@ -827,6 +861,7 @@ void WaterDepth(const tN2kMsg &N2kMsg) {
   double Offset;
 
   if (ParseN2kWaterDepth(N2kMsg,SID,DepthBelowTransducer,Offset) ) {
+    #ifdef PRINTNMEA
     if ( N2kIsNA(Offset) || Offset == 0 ) {
       PrintLabelValWithConversionCheckUnDef("Depth below transducer",DepthBelowTransducer);
       if ( N2kIsNA(Offset) ) {
@@ -844,6 +879,7 @@ void WaterDepth(const tN2kMsg &N2kMsg) {
         OutputStream->println(DepthBelowTransducer+Offset); 
       } else {  OutputStream->println(" not available"); }
     }
+    #endif
     depth = String(DepthBelowTransducer, 1);
     jsonDoc["depth"] = depth;
     notifyClients();
@@ -974,7 +1010,7 @@ void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
   int iHandler;
   
   // Find handler
-  OutputStream->print("In Main Handler: "); OutputStream->println(N2kMsg.PGN);
+//  OutputStream->print("In Main Handler: "); OutputStream->println(N2kMsg.PGN);
   for (iHandler=0; NMEA2000Handlers[iHandler].PGN!=0 && !(N2kMsg.PGN==NMEA2000Handlers[iHandler].PGN); iHandler++);
   
   if (NMEA2000Handlers[iHandler].PGN!=0) {
