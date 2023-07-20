@@ -254,10 +254,10 @@ String secondsToTimeString(int seconds) {
 
 String convertDaysToDate(uint16_t daysSince1970)
 {
-  time_t timestamp = ((unsigned long)daysSince1970-165) * SECS_PER_DAY;
+  time_t timestamp = ((unsigned long)daysSince1970) * SECS_PER_DAY;
   struct tm *timeinfo;
   timeinfo = gmtime(&timestamp);
-  Serial.print(timeinfo);
+//  Serial.print(timeinfo);
   String ret = String( (int)( timeinfo->tm_year + 1900) ) + "-" + String( (int)timeinfo->tm_mon + 1) + "-" + String( (int)timeinfo->tm_mday);
   return ret;
 }

@@ -1,5 +1,5 @@
 /*
-by Dr.András Szép v1.4 13.7.2023 GNU General Public License (GPL).
+by Dr.András Szép v1.5 21.7.2023 GNU General Public License (GPL).
 */
 
 /*
@@ -92,6 +92,7 @@ void Speed(const tN2kMsg &N2kMsg);
 void WaterDepth(const tN2kMsg &N2kMsg);
 void BinaryStatus(const tN2kMsg &N2kMsg);
 void FluidLevel(const tN2kMsg &N2kMsg);
+void WindData(const tN2kMsg &N2kMsg);
 void OutsideEnvironmental(const tN2kMsg &N2kMsg);
 void Temperature(const tN2kMsg &N2kMsg);
 void TemperatureExt(const tN2kMsg &N2kMsg);
@@ -127,6 +128,7 @@ tNMEA2000Handler NMEA2000Handlers[]={
   {129033L,&LocalOffset},
   {129045L,&UserDatumSettings},
   {129540L,&GNSSSatsInView},
+  {130306L,&WindData},
   {130310L,&OutsideEnvironmental},
   {130312L,&Temperature},
   {130313L,&Humidity},
@@ -442,6 +444,7 @@ void EngineRapid(const tN2kMsg &N2kMsg) {
 
 //*****************************************************************************
 void EngineDynamicParameters(const tN2kMsg &N2kMsg) {
+  /*
     unsigned char EngineInstance;
     double EngineOilPress;
     double EngineOilTemp;
@@ -474,6 +477,7 @@ void EngineDynamicParameters(const tN2kMsg &N2kMsg) {
     } else {
       OutputStream->print("Failed to parse PGN: "); OutputStream->println(N2kMsg.PGN);
     }
+  */
 }
 
 //*****************************************************************************
@@ -539,7 +543,7 @@ void Heading(const tN2kMsg &N2kMsg) {
     }
 }
 
-//*****************************************************************************
+//**#cogsog***************************************************************************
 void COGSOG(const tN2kMsg &N2kMsg) {
     unsigned char SID;
     tN2kHeadingReference HeadingReference;
@@ -554,7 +558,7 @@ void COGSOG(const tN2kMsg &N2kMsg) {
       PrintLabelValWithConversionCheckUnDef("  SOG (m/s): ",SOG,0,true);
       cog = String((int)(COG * radToDeg));
       jsonDoc["cog"] = cog;
-      sog = String((int)(SOG * mpsToKn));
+      sog = String((SOG * mpsToKn),1);
       jsonDoc["sog"] = sog;
       notifyClients();
     } else {
@@ -616,6 +620,7 @@ void GNSS(const tN2kMsg &N2kMsg) {
 
 //*****************************************************************************
 void UserDatumSettings(const tN2kMsg &N2kMsg) {
+  /*
   if (N2kMsg.PGN!=129045L) return;
   int Index=0;
   double val;
@@ -635,10 +640,12 @@ void UserDatumSettings(const tN2kMsg &N2kMsg) {
   PrintLabelValWithConversionCheckUnDef("  rotation in z (deg): ",val,&RadToDeg,true,5);
   val=N2kMsg.GetFloat(Index);
   PrintLabelValWithConversionCheckUnDef("  scale: ",val,0,true,3);
+  */
 }
 
 //*****************************************************************************
 void GNSSSatsInView(const tN2kMsg &N2kMsg) {
+  /*
   unsigned char SID;
   tN2kRangeResidualMode Mode;
   uint8_t NumberOfSVs;
@@ -657,6 +664,7 @@ void GNSSSatsInView(const tN2kMsg &N2kMsg) {
                         OutputStream->print("    status: "); OutputStream->println(SatelliteInfo.UsageStatus);
     }
   }
+  */
 }
 
 //*****************************************************************************
@@ -674,6 +682,32 @@ void LocalOffset(const tN2kMsg &N2kMsg) {
       OutputStream->print("Failed to parse PGN: "); OutputStream->println(N2kMsg.PGN);
     }
 }
+
+//**#windspeed*#windangle**************************************************************************
+void WindData(const tN2kMsg &N2kMsg)
+{
+    unsigned char SID;
+    double WindSpeed;
+    double WindAngle;
+    tN2kWindReference WindReference;
+
+    if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference))
+    {
+      PrintLabelValWithConversionCheckUnDef("Wind speed(m/s): ", WindSpeed, 0, true);
+      PrintLabelValWithConversionCheckUnDef(", direction: ", WindAngle, &RadToDeg, true);
+                        OutputStream->println(WindReference);
+      winddir = String((int)(WindAngle * radToDeg));
+      jsonDoc["winddir"] = winddir;
+      windspeed = String((WindSpeed * mpsToKn),1);
+      jsonDoc["windspeed"] = windspeed;
+      notifyClients();
+    }
+    else
+    {
+      OutputStream->print("Failed to parse PGN: ");
+      OutputStream->println(N2kMsg.PGN);
+    }
+} 
 
 //**#watertemp*#airtemp*#pressure*************************************************************************
 void OutsideEnvironmental(const tN2kMsg &N2kMsg) {
@@ -848,7 +882,7 @@ void Speed(const tN2kMsg &N2kMsg) {
       OutputStream->print(", ");
       PrintN2kEnumType(SWRT,OutputStream,true);
     #endif
-      speed = String( SOW, 1);
+      speed = String( SOW*msToKn, 1);
       jsonDoc["speed"] = speed;
       notifyClients();
     }

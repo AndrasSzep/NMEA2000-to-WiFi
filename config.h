@@ -2,10 +2,10 @@
 /* 
 by Dr.András Szép under GNU General Public License (GPL).
 */
-//#define DEBUG       //additional print of all data on serial
+#define DEBUG       //additional print of all data on serial
 //#define PRINTNMEA
 //#define STOREWIFI   // store wifi credentials on the SPIFFS
-//#define READWIFI    // get Wifi credentials from SPIFFS
+#define READWIFI    // get Wifi credentials from SPIFFS
 //#define ENVSENSOR       //environmental sensors connected
 
 #define OTAPORT 8080    //OTA port  - if defined it means we can access the OTA interface to update files on the SPIFFs
