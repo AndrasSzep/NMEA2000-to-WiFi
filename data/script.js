@@ -278,6 +278,8 @@ function onMessage(event) {
 		}
 	}
     // Update the respective spans with the received dat
+    if('cog' in data) {document.getElementById('cog').textContent = data.cog;}
+    if('sog' in data) {document.getElementById('sog').textContent = data.sog;}
     if('rpm' in data) {document.getElementById('rpm').textContent = data.rpm;}
     if('depth' in data) {document.getElementById('depth').textContent = data.depth;}
     if('speed' in data) {document.getElementById('speed').textContent = data.speed;}
