@@ -55,6 +55,7 @@ int parseNMEA0183( String sentence, String data[]) {
   data[fieldIdx+1] = sentence.substring(endIdx+1,endIdx+3);
   return noOfFields+1;
 }
+
 /*
 // Initialize SPIFFS
 void initFS() {
@@ -66,6 +67,7 @@ void initFS() {
   }
 }
 */
+
 void storeString(String path, String content) {
   File file = SPIFFS.open(path, FILE_WRITE);
   if (!file) {
@@ -101,7 +103,7 @@ String int2string(int number) {
 }
 
 String GPStoString( double coordinate) {
-//  Serial.print(coordinate);
+
   String ret = "";
   if( coordinate < 0) {
     coordinate = -coordinate;
@@ -113,7 +115,7 @@ String GPStoString( double coordinate) {
   double secondsFloat = (minutesFloat - min) * 60.0;   // Calculate the decimal seconds part
   int sec = (int)secondsFloat;                         // Extract the whole seconds part
   ret += String(deg) + "°" + String(min) + "'" + String(sec) + '"';
-//  Serial.println(ret);
+
   return ret;
 }
 
@@ -212,8 +214,7 @@ String updateStoredData(const char* filename, int newValue) {
   return commaSeparatedString;
 }
 
-String getDT()
-{
+String getDT() {
   time_t now = time(nullptr);            // Get current time as time_t
   struct tm *currentTime = gmtime(&now); // Convert time_t to struct tm in UTC
 
@@ -252,12 +253,10 @@ String secondsToTimeString(int seconds) {
     return timeString;
 }
 
-String convertDaysToDate(uint16_t daysSince1970)
-{
+String convertDaysToDate(uint16_t daysSince1970) {
   time_t timestamp = ((unsigned long)daysSince1970) * SECS_PER_DAY;
   struct tm *timeinfo;
   timeinfo = gmtime(&timestamp);
-//  Serial.print(timeinfo);
   String ret = String( (int)( timeinfo->tm_year + 1900) ) + "-" + String( (int)timeinfo->tm_mon + 1) + "-" + String( (int)timeinfo->tm_mday);
   return ret;
 }
@@ -265,8 +264,7 @@ String convertDaysToDate(uint16_t daysSince1970)
 // Initialize WiFi
 String  ssid, password;
 
-void initWiFi()
-{
+void initWiFi() {
 #ifdef STOREWIFI
   storeString("/ssid.txt", myssid);
   storeString("/password.txt", mypassword);
@@ -278,7 +276,6 @@ void initWiFi()
   ssid = myssid;
   password = mypassword;
 #endif
-
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
   Serial.print("Connecting to WiFi ...");

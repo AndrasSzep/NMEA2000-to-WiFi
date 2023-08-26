@@ -1,5 +1,6 @@
+const char* byme = "by Dr.András Szép v1.5 21.7.2023";
 /*
-by Dr.András Szép v1.5 21.7.2023 GNU General Public License (GPL).
+ GNU General Public License (GPL).
 */
 
 /*
@@ -60,6 +61,9 @@ ToDo:
 #include <NMEA2000_CAN.h>
 #include <N2kMessages.h>
 #include <N2kMessagesEnumToStr.h>
+#include <time.h>
+#include <N2kMsg.h>
+#include <NMEA2000.h>
 
 unsigned long previousMillis = 0;       // Variable to store the previous time
 unsigned long storedMillis = 0;         // time of last stored env.data
@@ -248,7 +252,8 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.println("\n\n**** NMEA2000 ->-> WEB ****\n");
+  Serial.print("\n\n**** NMEA2000 ->-> WEB **** ");
+  Serial.println(byme);
   delay(100);
 #ifdef ENVSENSOR
 //    M5.begin();             // Init M5StickC.  初始化M5StickC
@@ -398,7 +403,7 @@ void SystemTime(const tN2kMsg &N2kMsg) {
       OutputStream->print("  time source: "); 
       PrintN2kEnumType(TimeSource,OutputStream);
     #endif
-      jsonDoc["timedate"] = convertDaysToDate(SystemDate) + "___" + secondsToTimeString((int)SystemTime) +"___";
+      jsonDoc["timedate"] = convertDaysToDate(SystemDate) + " " + secondsToTimeString((int)SystemTime) +"___";
       notifyClients();
     } else {
       OutputStream->print("Failed to parse PGN: "); OutputStream->println(N2kMsg.PGN);
@@ -607,7 +612,7 @@ void GNSS(const tN2kMsg &N2kMsg) {
     PrintLabelValWithConversionCheckUnDef("  geoidal separation: ",GeoidalSeparation,0,true);
     PrintLabelValWithConversionCheckUnDef("  reference stations: ",nReferenceStations,0,true);
     #endif
-    jsonDoc["timedate"] = convertDaysToDate(DaysSince1970) + " " + secondsToTimeString((int)SecondsSinceMidnight) + "___";
+    jsonDoc["timedate"] = convertDaysToDate(DaysSince1970) + " " + secondsToTimeString((int)SecondsSinceMidnight) + " ";
     BoatData.Latitude = Latitude;
     BoatData.Longitude = Longitude;
     jsonDoc["latitude"] = GPStoString(BoatData.Latitude);
@@ -695,7 +700,6 @@ void WindData(const tN2kMsg &N2kMsg)
     {
       PrintLabelValWithConversionCheckUnDef("Wind speed(m/s): ", WindSpeed, 0, true);
       PrintLabelValWithConversionCheckUnDef(", direction: ", WindAngle, &RadToDeg, true);
-                        OutputStream->println(WindReference);
       winddir = String((int)(WindAngle * radToDeg));
       jsonDoc["winddir"] = winddir;
       windspeed = String((WindSpeed * mpsToKn),1);
@@ -720,12 +724,18 @@ void OutsideEnvironmental(const tN2kMsg &N2kMsg) {
       PrintLabelValWithConversionCheckUnDef("Water temp: ",WaterTemperature,&KelvinToC);
       PrintLabelValWithConversionCheckUnDef(", outside ambient temp: ",OutsideAmbientAirTemperature,&KelvinToC);
       PrintLabelValWithConversionCheckUnDef(", pressure: ",AtmosphericPressure,0,true);
-      airtemp = String(KelvinToC(OutsideAmbientAirTemperature), 1);
-      jsonDoc["airtemp"] = airtemp;
-      watertemp = String(KelvinToC(WaterTemperature), 1);
-      jsonDoc["watertemp"] = watertemp;
-      pressure = String((int)(AtmosphericPressure/kpaTommHg));
-      jsonDoc["pressure"] = pressure;
+      if( OutsideAmbientAirTemperature > 100 && OutsideAmbientAirTemperature < 350) {
+        airtemp = String(KelvinToC(OutsideAmbientAirTemperature), 1);
+        jsonDoc["airtemp"] = airtemp;
+      }
+      if( WaterTemperature > 100 && WaterTemperature < 340){
+        watertemp = String(KelvinToC(WaterTemperature), 1);
+        jsonDoc["watertemp"] = watertemp;
+      }
+      if( AtmosphericPressure > 10000 && AtmosphericPressure < 2000000 ) {
+        pressure = String((int)(AtmosphericPressure/kpaTommHg));
+        jsonDoc["pressure"] = pressure;
+      }
       notifyClients();
     } else {
       OutputStream->print("Failed to parse PGN: ");  OutputStream->println(N2kMsg.PGN);
@@ -746,8 +756,10 @@ void Temperature(const tN2kMsg &N2kMsg) {
       PrintLabelValWithConversionCheckUnDef(", actual temperature: ",ActualTemperature,&KelvinToC);
       PrintLabelValWithConversionCheckUnDef(", set temperature: ",SetTemperature,&KelvinToC,true);
     #endif
-      airtemp = String(KelvinToC(ActualTemperature),1);
-      jsonDoc["airtemp"] = airtemp;
+      if( ActualTemperature > 100 && ActualTemperature < 350) {
+        airtemp = String(KelvinToC(ActualTemperature), 1);
+        jsonDoc["airtemp"] = airtemp;
+      }
       notifyClients();
     } else {
       OutputStream->print("Failed to parse PGN: ");  OutputStream->println(N2kMsg.PGN);
@@ -800,12 +812,13 @@ void Pressure(const tN2kMsg &N2kMsg) {
 
 //*****************************************************************************
 void TemperatureExt(const tN2kMsg &N2kMsg) {
+/*   
     unsigned char SID;
     unsigned char TempInstance;
     tN2kTempSource TempSource;
     double ActualTemperature;
     double SetTemperature;
-    
+ 
     if (ParseN2kTemperatureExt(N2kMsg,SID,TempInstance,TempSource,ActualTemperature,SetTemperature) ) {
                         OutputStream->print("Temperature source: "); PrintN2kEnumType(TempSource,OutputStream,false);
       PrintLabelValWithConversionCheckUnDef(", actual temperature: ",ActualTemperature,&KelvinToC);
@@ -813,6 +826,7 @@ void TemperatureExt(const tN2kMsg &N2kMsg) {
     } else {
       OutputStream->print("Failed to parse PGN: ");  OutputStream->println(N2kMsg.PGN);
     }
+    */
 }
 
 //*****************************************************************************
@@ -1041,12 +1055,10 @@ void Attitude(const tN2kMsg &N2kMsg) {
 //*****************************************************************************
 //NMEA 2000 message handler
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
-  int iHandler;
-  
-  // Find handler
+  int iHandler; 
+// Find handler
 //  OutputStream->print("In Main Handler: "); OutputStream->println(N2kMsg.PGN);
   for (iHandler=0; NMEA2000Handlers[iHandler].PGN!=0 && !(N2kMsg.PGN==NMEA2000Handlers[iHandler].PGN); iHandler++);
-  
   if (NMEA2000Handlers[iHandler].PGN!=0) {
     NMEA2000Handlers[iHandler].Handler(N2kMsg); 
   }
@@ -1055,19 +1067,27 @@ void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 //*****************************************************************************
 void loop() 
 {
+  tN2kMsg N2kMsg;   //n2k messagebuff
   jsonDoc.clear();
-  jsonDoc["chipid"] = String(sn);
+//  jsonDoc["chipid"] = String(sn);
 #ifdef ENVSENSOR
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= ENVINTERVAL)
   {
-    pres = qmp6988.calcPressure();
-    if (sht30.get() == 0) {  // Obtain the data of shT30.  获取sht30的数据
+    pres = qmp6988.calcPressure();  //get atmospheric pressure
+    if (sht30.get() == 0) {  // Obtain the data of shT30
         tmp = sht30.cTemp;   // Store the temperature obtained from shT30.
         hum = sht30.humidity;  // Store the humidity obtained from the SHT30.
     } else {
         tmp = 20, hum = 50;
     }
+        BoatData.Pressure = pres;
+        BoatData.Humidity = hum;
+        BoatData.AirTemperature = tmp + KToC;
+        SetN2kOutsideEnvironmentalParameters(N2kMsg, 0, BoatData.WaterTemperature, BoatData.AirTemperature, BoatData.Pressure);
+        NMEA2000.SendMsg(N2kMsg); 
+        SetN2kHumidity(N2kMsg, 0,1, N2khs_InsideHumidity, BoatData.Humidity);
+        NMEA2000.SendMsg(N2kMsg);
     airtemp = String(tmp, 1) + "°C";
     humidity = String(hum, 1) + "%";
     pressure = String((pres/kpaTommHg), 0) + "mm";
@@ -1085,7 +1105,7 @@ void loop()
     previousMillis = currentMillis;
   }
 #endif
-#ifdef UDPPort
+#ifdef UDPPort            // processing NMEA0183 messages from the UPDPort
   int packetSize = udp.parsePacket();
   if (packetSize) {
     processPacket(packetSize);
@@ -1098,7 +1118,7 @@ void loop()
   ws.cleanupClients();
 }
 #ifdef UDPPort
-void processPacket(int packetSize)
+void processPacket(int packetSize)            // processing NMEA0183 messages from the UPDPort
 {
   char packetBuffer[4096];
   udp.read(packetBuffer, packetSize);

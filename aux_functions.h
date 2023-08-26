@@ -4,7 +4,7 @@ by Dr.András Szép under GNU General Public License (GPL).
 
 int parseNMEA0183( String sentence, String data[]);
 //void initFS();
-void storeString(String path, String content);
+void  storeString(String path, String content);
 String retrieveString(String path);
 String GPStoString( double coordinate);
 String convertGPString(String input) ;

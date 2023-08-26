@@ -2,11 +2,20 @@
 /* 
 by Dr.András Szép under GNU General Public License (GPL).
 */
+//#define N2k_SPI_CS_PIN 53    // Pin for SPI select for mcp_can
+//#define N2k_CAN_INT_PIN 21   // Interrupt pin for mcp_can
+//#define USE_MCP_CAN_CLOCK_SET 8  // Uncomment this, if your mcp_can shield has 8MHz chrystal
+#define ESP32_CAN_TX_PIN GPIO_NUM_22 //  22 for M5Stack Atom and 17 for Wemos Lolin32 Lite
+#define ESP32_CAN_RX_PIN GPIO_NUM_19 // 19  for M5Stack Atom and 16 for Wemos Lolin32 Lite
+//#define ESP32_CAN_TX_PIN GPIO_NUM_5  // Set CAN TX port to 5 
+//#define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
+//#define NMEA2000_ARDUINO_DUE_CAN_BUS tNMEA2000_due::CANDevice1    // Uncomment this, if you want to use CAN bus 1 instead of 0 for Arduino DUE
+
 #define DEBUG       //additional print of all data on serial
 //#define PRINTNMEA
 //#define STOREWIFI   // store wifi credentials on the SPIFFS
 #define READWIFI    // get Wifi credentials from SPIFFS
-//#define ENVSENSOR       //environmental sensors connected
+#define ENVSENSOR       //environmental sensors connected
 
 #define OTAPORT 8080    //OTA port  - if defined it means we can access the OTA interface to update files on the SPIFFs
 const char*   servername  = "nmea";     //nDNS servername - http://servername.local
@@ -29,12 +38,7 @@ const double msToKn = 3600.0 / 1852.0;
 const double kpaTommHg = 133.322387415;
 const double KToC = 273.15;
 const double mpsToKn = 1.943844;
-//#define N2k_SPI_CS_PIN 53    // Pin for SPI select for mcp_can
-//#define N2k_CAN_INT_PIN 21   // Interrupt pin for mcp_can
-//#define USE_MCP_CAN_CLOCK_SET 8  // Uncomment this, if your mcp_can shield has 8MHz chrystal
-#define ESP32_CAN_TX_PIN GPIO_NUM_22 // Uncomment this and set right CAN TX pin definition, if you use ESP32 and do not have TX on default IO 16
-#define ESP32_CAN_RX_PIN GPIO_NUM_19 // Uncomment this and set right CAN RX pin definition, if you use ESP32 and do not have RX on default IO 4
-//#define NMEA2000_ARDUINO_DUE_CAN_BUS tNMEA2000_due::CANDevice1    // Uncomment this, if you want to use CAN bus 1 instead of 0 for Arduino DUE
+
 
 #ifdef ENVSENSOR
 #include <M5StickC.h>
