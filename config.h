@@ -11,7 +11,7 @@ by Dr.András Szép under GNU General Public License (GPL).
 //#define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
 //#define NMEA2000_ARDUINO_DUE_CAN_BUS tNMEA2000_due::CANDevice1    // Uncomment this, if you want to use CAN bus 1 instead of 0 for Arduino DUE
 
-#define DEBUG       //additional print of all data on serial
+//#define DEBUG       //additional print of all data on serial
 //#define PRINTNMEA
 //#define STOREWIFI   // store wifi credentials on the SPIFFS
 #define READWIFI    // get Wifi credentials from SPIFFS

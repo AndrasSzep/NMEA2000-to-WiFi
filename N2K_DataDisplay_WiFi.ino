@@ -140,6 +140,16 @@ tNMEA2000Handler NMEA2000Handlers[]={
   {130316L,&TemperatureExt},
   {0,0}
 };
+// Set the information for other bus devices, which messages we support
+const unsigned long TransmitMessages[] PROGMEM = {130310L, // OutsideEnvironmental
+                                                  130312L, // Temperature
+                                                  130313L, // Humidity
+                                                  130314L, // Pressure
+                                                  130316L, // TemperatureExt
+                                                  0
+                                                 };
+
+int NodeAddress = 33;  // To store Node Address                                              
 
 Stream *OutputStream;
 
@@ -285,7 +295,16 @@ void setup() {
             { request->send(SPIFFS, "/index.html", "text/html"); });
 
   // Register the request handler
-  server.on("/historicdata", HTTP_GET, handleRequest);
+  server.on("/water", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/water.txt", "text/html"); });
+  server.on("/air", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/temperature.txt", "text/html"); });
+  server.on("/pressure", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/pressure.txt", "text/html"); });
+  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/humidity.txt", "text/html"); });
+
+ // server.on("/historicdata", HTTP_GET, handleRequest);
 
   server.serveStatic("/", SPIFFS, "/");
 
@@ -359,6 +378,8 @@ void setup() {
 
   servOTA.begin();
 #endif
+  NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
+  NMEA2000.ExtendTransmitMessages(TransmitMessages);
   //  NMEA2000.SetN2kCANReceiveFrameBufSize(50);
   // Do not forward bus messages at all
   NMEA2000.SetForwardType(tNMEA2000::fwdt_Text);
@@ -1084,9 +1105,9 @@ void loop()
         BoatData.Pressure = pres;
         BoatData.Humidity = hum;
         BoatData.AirTemperature = tmp + KToC;
-        SetN2kOutsideEnvironmentalParameters(N2kMsg, 0, BoatData.WaterTemperature, BoatData.AirTemperature, BoatData.Pressure);
+        SetN2kOutsideEnvironmentalParameters(N2kMsg, 1, BoatData.WaterTemperature, BoatData.AirTemperature, BoatData.Pressure);
         NMEA2000.SendMsg(N2kMsg); 
-        SetN2kHumidity(N2kMsg, 0,1, N2khs_InsideHumidity, BoatData.Humidity);
+        SetN2kHumidity(N2kMsg, 1,1, N2khs_InsideHumidity, BoatData.Humidity);
         NMEA2000.SendMsg(N2kMsg);
     airtemp = String(tmp, 1) + "°C";
     humidity = String(hum, 1) + "%";
