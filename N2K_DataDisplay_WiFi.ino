@@ -184,7 +184,7 @@ String pressure = "760";
 String airtemp = "21";
 String pressurearray = "760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760,760";
 
-DynamicJsonDocument jsonDoc(1024);
+JsonDocument jsonDoc;
 
 
 void notifyClients()
@@ -210,7 +210,7 @@ void handleRequest(AsyncWebServerRequest *request)
   if (request->url() == "/historicdata")
   {
     // Create a JSON document
-    DynamicJsonDocument jsonDoc(1024);
+    JsonDocument jsonDoc;
     // read data
     jsonDoc["histtemp"] = readStoredData("/temperature");
     jsonDoc["histhum"] = readStoredData("/humidity");
