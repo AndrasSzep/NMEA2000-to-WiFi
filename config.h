@@ -2,20 +2,32 @@
 /* 
 by Dr.András Szép under GNU General Public License (GPL).
 */
-//#define N2k_SPI_CS_PIN 53    // Pin for SPI select for mcp_can
-//#define N2k_CAN_INT_PIN 21   // Interrupt pin for mcp_can
-//#define USE_MCP_CAN_CLOCK_SET 8  // Uncomment this, if your mcp_can shield has 8MHz chrystal
-#define ESP32_CAN_TX_PIN GPIO_NUM_22 //  22 for M5Stack Atom and 17 for Wemos Lolin32 Lite
-#define ESP32_CAN_RX_PIN GPIO_NUM_19 // 19  for M5Stack Atom and 16 for Wemos Lolin32 Lite
-//#define ESP32_CAN_TX_PIN GPIO_NUM_5  // Set CAN TX port to 5 
-//#define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
+//#define M5AtomLite
+//#define M5AtomU
+#define Lolin32
+#ifdef M5AtomLite
+#define ESP32_Type "M5AtomLite"
+#define ESP32_CAN_TX_PIN GPIO_NUM_22 //  22 for M5Stack Atom Lite // 32 for AtomU white
+#define ESP32_CAN_RX_PIN GPIO_NUM_19 // 19  for M5Stack Atom Lite // 26 for AtomU yellow
+#endif
+#ifdef M5AtomU
+#define ESP32_Type "M5AtomU"
+#define ESP32_CAN_TX_PIN GPIO_NUM_32 // for AtomU white
+#define ESP32_CAN_RX_PIN GPIO_NUM_26 //for AtomU yellow
+#endif
+#ifdef  Lolin32   //  consider Wemos Lolin32Lite
+#define ESP32_Type "Lolin32Lite"
+#define ESP32_CAN_TX_PIN GPIO_NUM_5  // Set CAN TX port to 5  for Wemos Lolin32 Lite/home/andras/Arduino/libraries/NMEA2000_esp32xx/NMEA2000_esp32xx.h:48: note: this is the location of the previous definition #define ESP32_CAN_TX_PIN GPIO_NUM_5
+#define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4  for Wemos Lolin32 Lite/home/andras/Arduino/libraries/NMEA2000_esp32xx/NMEA2000_esp32xx.h:51: note: this is the location of the previous definition #define ESP32_CAN_RX_PIN GPIO_NUM_4
+#endif
+
+
 //#define NMEA2000_ARDUINO_DUE_CAN_BUS tNMEA2000_due::CANDevice1    // Uncomment this, if you want to use CAN bus 1 instead of 0 for Arduino DUE
 
-//#define DEBUG       //additional print of all data on serial
-//#define PRINTNMEA
+#define DEBUG       //additional print of all data on serial
 //#define STOREWIFI   // store wifi credentials on the SPIFFS
 #define READWIFI    // get Wifi credentials from SPIFFS
-#define ENVSENSOR       //environmental sensors connected
+//#define ENVSENSOR       //environmental sensors connected
 
 #define OTAPORT 8080    //OTA port  - if defined it means we can access the OTA interface to update files on the SPIFFs
 const char*   servername  = "nmea";     //nDNS servername - http://servername.local
@@ -27,28 +39,26 @@ String  UTC ="2023-07-11 20:30:00";
 
 #define MAX_NMEA0183_MSG_BUF_LEN 4096
 #define MAX_NMEA_FIELDS  64
-/*
+
 #ifdef ENVSENSOR
 #define SDA_PIN 26
 #define SCL_PIN 32
 #endif
-*/
+
 const double radToDeg = 180.0 / M_PI;
 const double msToKn = 3600.0 / 1852.0;
 const double kpaTommHg = 133.322387415;
 const double KToC = 273.15;
-const double mpsToKn = 1.943844;
-
 
 #ifdef ENVSENSOR
 #include <M5StickC.h>
 #include "M5_ENV.h"
 
-    SHT3X sht30;
+SHT3X sht30;
 QMP6988 qmp6988;
 float tmp = 20.0;
 float hum = 50.0;
-float pres = 760.0;
+float pres = 755.0;
 #define ENVINTERVAL 10000     // Interval in milliseconds
 #define STOREINTERVAL 60000 // store env data in SPIFFS ones/hour
 #endif
