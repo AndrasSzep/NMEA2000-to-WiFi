@@ -584,7 +584,7 @@ void COGSOG(const tN2kMsg &N2kMsg) {
       PrintLabelValWithConversionCheckUnDef("  SOG (m/s): ",SOG,0,true);
       cog = String((int)(COG * radToDeg));
       jsonDoc["cog"] = cog;
-      sog = String((SOG * mpsToKn),1);
+      sog = String((SOG * msToKn),1);
       jsonDoc["sog"] = sog;
       notifyClients();
     } else {
@@ -723,7 +723,7 @@ void WindData(const tN2kMsg &N2kMsg)
       PrintLabelValWithConversionCheckUnDef(", direction: ", WindAngle, &RadToDeg, true);
       winddir = String((int)(WindAngle * radToDeg));
       jsonDoc["winddir"] = winddir;
-      windspeed = String((WindSpeed * mpsToKn),1);
+      windspeed = String((WindSpeed * msToKn),1);
       jsonDoc["windspeed"] = windspeed;
       notifyClients();
     }
