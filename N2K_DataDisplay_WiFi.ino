@@ -1275,24 +1275,24 @@ void processPacket(int packetSize)           {
           else if (command == "MWD")
           {
             stringBD.WindDirectionT = String(int(nmeaStringData[1].toDouble()));
-            winddir = stringBD.WindDirectionT + "°true";
+            winddir = stringBD.WindDirectionT + "°t";
             jsonDoc["winddir"] = winddir;
             stringBD.WindDirectionM = String(int(nmeaStringData[3].toDouble()));
             //          winddir  = stringBD.WindDirectionM + "m";
             //          jsonDoc["winddir"] = winddir;
             stringBD.WindSpeedK = String(int(nmeaStringData[5].toDouble()));
-            windspeed = stringBD.WindSpeedK;
+            windspeed = stringBD.WindSpeedK + "t";
             jsonDoc["windspeed"] = windspeed;
             notifyClients();
           }
           else if (command == "MWV")
           { // wind speed and angle
             stringBD.WindDirectionT = String(int(nmeaStringData[1].toDouble()));
-            winddir = stringBD.WindDirectionT + "°app";
+            winddir = stringBD.WindDirectionT + "°a";
             jsonDoc["winddir"] = winddir;
             stringBD.WindSpeedK = nmeaStringData[3];
             windspeed = stringBD.WindSpeedK; // + nmeaStringData[4];
-            jsonDoc["windspeed"] = windspeed + " app";
+            jsonDoc["windspeed"] = windspeed + "a";
             notifyClients();
           }
           else if (command == "RMB")

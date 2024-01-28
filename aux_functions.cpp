@@ -8,9 +8,9 @@ by Dr.András Szép under GNU General Public License (GPL).
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <NTPClient.h>
-//#include "config.h"
-#include "mywifi.h"
 #include <TimeLib.h>
+#include "mywifi.h"
+
 
 int parseNMEA0183( String sentence, String data[]) {
   int noOfFields = 0;
@@ -265,17 +265,18 @@ String convertDaysToDate(uint16_t daysSince1970) {
 String  ssid, password;
 
 void initWiFi() {
-#ifdef STOREWIFI
-  storeString("/ssid.txt", myssid);
-  storeString("/password.txt", mypassword);
-#endif
-#ifdef READWIFI
-  ssid = retrieveString(String("/ssid.txt"));
-  password = retrieveString(String("/password.txt"));
-#else
-  ssid = myssid;
-  password = mypassword;
-#endif
+
+  #ifdef STOREWIFI
+    storeString("/ssid.txt", myssid);
+    storeString("/password.txt", mypassword);
+  #endif
+  #ifdef READWIFI
+    ssid = retrieveString(String("/ssid.txt"));
+    password = retrieveString(String("/password.txt"));
+  #else
+    ssid = myssid;
+    password = mypassword;
+  #endif
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
   Serial.print("Connecting to WiFi ...");
