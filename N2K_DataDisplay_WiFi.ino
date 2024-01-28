@@ -308,10 +308,9 @@ void setup() {
   Serial.println("WebServer started");
   delay(100);
   /*use mdns for host name resolution*/
-  uint64_t chipID = ESP.getEfuseMac();
-
-  sprintf(sn, "%s%llu", servername, chipID);
-
+//  uint64_t chipID = ESP.getEfuseMac();
+//  sprintf(sn, "%s%llu", servername, chipID); //only if we want a uniq server name like "http://nmea123456789.local"
+  strcpy(sn, servername);
   if (!MDNS.begin(sn)) // http://nmeaXXXXXXX.local
     Serial.println("Error setting up MDNS responder!");
   else
