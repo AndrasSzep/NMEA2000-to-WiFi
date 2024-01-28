@@ -22,9 +22,9 @@ by Dr.András Szép under GNU General Public License (GPL).
 #define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4  for Wemos Lolin32 Lite/home/andras/Arduino/libraries/NMEA2000_esp32xx/NMEA2000_esp32xx.h:51: note: this is the location of the previous definition #define ESP32_CAN_RX_PIN GPIO_NUM_4
 #endif
 
-//#define APPARENTWIND
-#ifndef APPARENTWIND 
-#define TRUEWIND
+//#define WINDAPPARENT
+#ifndef WINDAPPARENT
+#define WINDTRUE
 #endif
 
 //#define NMEA2000_ARDUINO_DUE_CAN_BUS tNMEA2000_due::CANDevice1    // Uncomment this, if you want to use CAN bus 1 instead of 0 for Arduino DUE

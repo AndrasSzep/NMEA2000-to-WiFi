@@ -47,7 +47,7 @@ ToDo:
 */
 
 #include "include.h"
-const String byme = "by Dr.András Szép v1.5 17.12.2023";
+const String byme = "by Dr.András Szép v1.51 28.01.2024";
 const String whatami = "NMEA2000 -> WiFi";
 
 #define LITTLE_FS 0
@@ -1123,9 +1123,9 @@ void loop()
         NMEA2000.SendMsg(N2kMsg); 
         SetN2kHumidity(N2kMsg, 1,1, N2khs_InsideHumidity, BoatData.Humidity);
         NMEA2000.SendMsg(N2kMsg);
-    airtemp = String(tmp, 1) + "°C";
-    humidity = String(hum, 1) + "%";
-    pressure = String((pres/kpaTommHg), 0) + "mm";
+    airtemp = String(tmp, 1);
+    humidity = String(hum, 1);
+    pressure = String((pres/kpaTommHg), 0);
     jsonDoc["airtemp"] = airtemp;
     jsonDoc["humidity"] = humidity;
     jsonDoc["pressure"] = pressure;
@@ -1247,53 +1247,55 @@ void processPacket(int packetSize)           {
           else if (command == "HDG")
           {
             stringBD.HeadingM = String(int(nmeaStringData[1].toDouble()));
-            heading = stringBD.HeadingM + "°";
+            heading = stringBD.HeadingM;
             jsonDoc["heading"] = heading;
             notifyClients();
           }
           else if (command == "HDM")
           {
             stringBD.HeadingM = String(int(nmeaStringData[1].toDouble()));
-            heading = stringBD.HeadingM + "°";
+            heading = stringBD.HeadingM;
             jsonDoc["heading"] = heading;
             notifyClients();
           }
           else if (command == "HDT")
           {
             stringBD.HeadingT = String(int(nmeaStringData[1].toDouble()));
-            heading = stringBD.HeadingT + "°";
+            heading = stringBD.HeadingT;
             jsonDoc["heading"] = heading;
             notifyClients();
           }
           else if (command == "MTW")
           {
             stringBD.WaterTemperature = nmeaStringData[1];
-            watertemp = stringBD.WaterTemperature + "°C";
+            watertemp = stringBD.WaterTemperature;
             jsonDoc["watertemp"] = watertemp;
             notifyClients();
           }
           else if (command == "MWD")
           {
+            #ifdef WINDTRUE
             stringBD.WindDirectionT = String(int(nmeaStringData[1].toDouble()));
-            winddir = stringBD.WindDirectionT + "°t";
+            winddir = stringBD.WindDirectionT;
             jsonDoc["winddir"] = winddir;
             stringBD.WindDirectionM = String(int(nmeaStringData[3].toDouble()));
-            //          winddir  = stringBD.WindDirectionM + "m";
-            //          jsonDoc["winddir"] = winddir;
-            stringBD.WindSpeedK = String(int(nmeaStringData[5].toDouble()));
-            windspeed = stringBD.WindSpeedK + "t";
+            stringBD.WindSpeedK = nmeaStringData[5];
+            windspeed = stringBD.WindSpeedK;
             jsonDoc["windspeed"] = windspeed;
             notifyClients();
+            #endif
           }
           else if (command == "MWV")
           { // wind speed and angle
+          #ifdef  WINDAPPARENT
             stringBD.WindDirectionT = String(int(nmeaStringData[1].toDouble()));
-            winddir = stringBD.WindDirectionT + "°a";
+            winddir = stringBD.WindDirectionT;
             jsonDoc["winddir"] = winddir;
             stringBD.WindSpeedK = nmeaStringData[3];
             windspeed = stringBD.WindSpeedK; // + nmeaStringData[4];
-            jsonDoc["windspeed"] = windspeed + "a";
+            jsonDoc["windspeed"] = windspeed ;
             notifyClients();
+          #endif
           }
           else if (command == "RMB")
           { // nav info
@@ -1350,10 +1352,10 @@ void processPacket(int packetSize)           {
           else if (command == "VHW")
           { // speed and Heading over water
             stringBD.HeadingT = String(int(nmeaStringData[1].toDouble()));
-            heading = stringBD.HeadingT + "t";
+            heading = stringBD.HeadingT;
             jsonDoc["heading"] = heading;
             stringBD.HeadingM = String(int(nmeaStringData[3].toDouble()));
-            heading = stringBD.HeadingM + "m";
+            heading = stringBD.HeadingM;
             jsonDoc["heading"] = heading;
             stringBD.Speed = nmeaStringData[5];
             speed = stringBD.Speed;
