@@ -12,4 +12,4 @@ You can use the power directly from the NMEA bus by any DC-DC adapter
 
 screen capture of simulation is at https://www.dropbox.com/scl/fi/ost2ywi9eomzk04h4kqe2/Screen-Recording-2023-06-28-at-22.37.08.mov?rlkey=dqs09dqkbhal8xzppeuf6nemi&dl=0
 
-![screencapture](https://github.com/AndrasSzep/NMEA2000-to-WiFi/blob/main/nemau.png)
+![screencapture](https://github.com/AndrasSzep/NMEA2000-to-WiFi/blob/main/nmeau.png)
