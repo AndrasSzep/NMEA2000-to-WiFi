@@ -243,7 +243,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
       if (strcmp((char *)data, "/historicdata") == 0)
       {
         // Prepare JSON data
-        DynamicJsonDocument jsonDoc(1024);
+        JsonDocument jsonDoc;
         // read data
         jsonDoc["histtemp"] = readStoredData("/temperature.txt");
         jsonDoc["histhum"] = readStoredData("/humidity.txt");
